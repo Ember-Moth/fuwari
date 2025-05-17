@@ -1,5 +1,5 @@
 # About
-This is the demo site for [Fuwari](https://github.com/saicaca/fuwari).
+This is the blog for [Ember Moth](https://github.com/Ember-Moth).
 
 ::github{repo="saicaca/fuwari"}
 

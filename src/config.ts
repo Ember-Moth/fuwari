@@ -57,16 +57,16 @@ export const profileConfig: ProfileConfig = {
 	bio: "Fight for All That is Beautiful in the World！",
 	links: [
 		{
-			name: "Twitter",
-			icon: "fa6-brands:twitter", // Visit https://icones.js.org/ for icon codes
+			name: "Email",
+			icon: "fa6-brands:email", // Visit https://icones.js.org/ for icon codes
 			// You will need to install the corresponding icon set if it's not already included
 			// `pnpm add @iconify-json/<icon-set-name>`
-			url: "https://twitter.com",
+			url: "mailto:ember_moth@proton.me",
 		},
 		{
-			name: "Steam",
-			icon: "fa6-brands:steam",
-			url: "https://store.steampowered.com",
+			name: "Telegram",
+			icon: "fa6-brands:telegram",
+			url: "https://t.me/Ember_Moth",
 		},
 		{
 			name: "GitHub",

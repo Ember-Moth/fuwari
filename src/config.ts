@@ -58,7 +58,7 @@ export const profileConfig: ProfileConfig = {
 	links: [
 		{
 			name: "Email",
-			icon: "fa6-brands:email", // Visit https://icones.js.org/ for icon codes
+			icon: "ic:baseline-email", // Visit https://icones.js.org/ for icon codes
 			// You will need to install the corresponding icon set if it's not already included
 			// `pnpm add @iconify-json/<icon-set-name>`
 			url: "mailto:ember_moth@proton.me",

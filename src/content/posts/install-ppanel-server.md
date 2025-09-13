@@ -2,7 +2,8 @@
 title: PPanel Server 二进制安装教程
 published: 2025-08-31
 description: 'PPanel 面板 服务端的二进制安装教程'
-image: ''
+image: 'https://raw.githubusercontent.com/perfect-panel/ppanel-web/main/apps/user/public/pwa-maskable-192x192.png
+'
 tags: [PPanel]
 category: '教程'
 draft: false 

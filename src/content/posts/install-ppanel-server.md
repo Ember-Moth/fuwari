@@ -116,9 +116,9 @@ echo "请牢记数据库密码！！！ 数据库密码：$DB_PASSWORD"
 
 # 创建数据库和用户（使用 mariadb 命令，避免弃用警告）
 mariadb -u root -p <<EOF
-CREATE DATABASE ppanel CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE ppanel_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER 'ppanel'@'localhost' IDENTIFIED BY '$DB_PASSWORD';
-GRANT ALL PRIVILEGES ON ppanel.* TO 'ppanel'@'localhost';
+GRANT ALL PRIVILEGES ON ppanel_db.* TO 'ppanel'@'localhost';
 FLUSH PRIVILEGES;
 EOF
 ```
@@ -129,7 +129,7 @@ EOF
 mkdir -p /etc/nginx/conf.d
 
 # 创建站点配置
-cat > /etc/nginx/conf.d/sspanel.conf <<'EOF'
+cat > /etc/nginx/conf.d/ppanel.conf <<'EOF'
 server {
     listen 80;
     listen [::]:80;
@@ -197,7 +197,7 @@ tar -zxvf ppanel-server-linux-amd64.tar.gz
 - 移动
 
 ```shell
-sudo mv ppanel-server /usr/local/bin/ppanel
+sudo mv ppanel-server /usr/local/bin/ppanel-server
 sudo mkdir -p /usr/local/etc/ppanel
 sudo mv ./etc/ppanel.yaml /usr/local/etc/ppanel/
 ```
@@ -231,7 +231,7 @@ MySQL:
   Addr: 127.0.0.1:3306 # MySQL地址
   Username: ppanel # MySQL用户名 (与创建的用户一致)
   Password: CHANGE_ME_TO_DB_PASSWORD # MySQL密码 (换成之前生成的随机密码)
-  Dbname: ppanel # MySQL数据库名 (与脚本创建的数据库一致)
+  Dbname: ppanel_db # MySQL数据库名 (与脚本创建的数据库一致)
   Config: charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai
   MaxIdleConns: 10
   MaxOpenConns: 100
@@ -259,7 +259,7 @@ Description=PPANEL Server
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/ppanel run --config /usr/local/etc/ppanel/ppanel.yaml
+ExecStart=/usr/local/bin/ppanel-server run --config /usr/local/etc/ppanel/ppanel.yaml
 Restart=always
 User=root
 WorkingDirectory=/usr/local/bin

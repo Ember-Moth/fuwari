@@ -9,6 +9,9 @@ draft: false
 lang: 'zh_CN'
 ---
 
+#### 前置系统要求
+
+- Debian 12
 
 #### 安装前的准备
 ```bash
@@ -113,8 +116,7 @@ echo "请牢记数据库密码！！！ 数据库密码：$DB_PASSWORD"
 # 创建数据库和用户（使用 mariadb 命令，避免弃用警告）
 mariadb -u root -p <<EOF
 CREATE DATABASE unishop_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'ppanel'@'localhost' IDENTIFIED BY '$DB_PASSWORD';
-GRANT ALL PRIVILEGES ON ppanel_db.* TO 'ppanel'@'localhost';
+ALTER USER 'root'@'localhost' IDENTIFIED BY '$DB_PASSWORD';
 FLUSH PRIVILEGES;
 EOF
 ```
@@ -227,8 +229,7 @@ git config --global --add safe.directory /var/www/unishop
 
 # 安装依赖
 echo "开始安装 Composer 依赖..."
-composer install --no-dev --optimize-autoloader
-
+composer install
 
 # 验证安装是否成功
 if [ ! -f vendor/autoload.php ]; then
@@ -245,11 +246,49 @@ php artisan key:generate
 ### 导入数据库
 
 ```bash
-mariadb -u unishop_db -p your_password < database/sql/install.sql
+# 假如你的数据库密码为 12345678，则 命令应该为 mariadb -u root -p123456789 < database/sql/install.sql 
+mariadb -u root -pyour_password < database/sql/install.sql
 ```
 ### 设置目录权限
 ```bash
 chown -R www-data:www-data /var/www/unishop
 chmod -R 755 /var/www/unishop/storage
 chmod -R 755 /var/www/unishop/bootstrap/cache
+```
+
+### 设置守护进程
+```bash
+cat > /etc/systemd/system/unishop.service <<EOF
+[Unit]
+Description=UniShop Queue
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+ExecStart=/usr/bin/php /var/www/unishop/artisan queue:work
+Restart=always
+WorkingDirectory=/var/www/unishop
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+- 重新加载 systemd 服务
+
+```bash
+systemctl daemon-reload
+```
+
+- 启动服务
+
+```bash
+systemctl start unishop
+```
+
+- 开机自启
+
+```bash
+systemctl enable unishop
 ```

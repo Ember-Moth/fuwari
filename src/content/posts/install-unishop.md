@@ -127,27 +127,25 @@ gpg --dearmor < /tmp/php.gpg > /usr/share/keyrings/php-archive-keyring.gpg
 echo "deb [signed-by=/usr/share/keyrings/php-archive-keyring.gpg] \
   https://packages.sury.org/php/ bookworm main" > /etc/apt/sources.list.d/php.list
 
-# 安装 PHP 8.4 及必需扩展
-apt update && apt install -y php8.4-{bcmath,bz2,cli,common,curl,fpm,gd,gmp,igbinary,intl,mbstring,mysql,opcache,readline,redis,soap,xml,yaml,zip}
+# 安装 PHP 7.4 及必需扩展
+apt update && apt install -y php7.4-{bcmath,bz2,cli,common,curl,fpm,gd,gmp,igbinary,intl,mbstring,mysql,opcache,readline,redis,soap,xml,yaml,zip}
 
-# 注意：posix 和 sodium 扩展是必需的
-# 大多数系统会通过 php8.4-common 自动安装，如果没有，请运行：
-# apt install -y php8.4-posix php8.4-sodium
+
 
 # 配置 PHP
-sed -i 's/^max_execution_time.*/max_execution_time = 300/' /etc/php/8.4/fpm/php.ini
-sed -i 's/^memory_limit.*/memory_limit = 256M/' /etc/php/8.4/fpm/php.ini
-sed -i 's/^post_max_size.*/post_max_size = 50M/' /etc/php/8.4/fpm/php.ini
-sed -i 's/^upload_max_filesize.*/upload_max_filesize = 50M/' /etc/php/8.4/fpm/php.ini
-sed -i 's/^;date.timezone.*/date.timezone = Asia\/Shanghai/' /etc/php/8.4/fpm/php.ini
+sed -i 's/^max_execution_time.*/max_execution_time = 300/' /etc/php/7.4/fpm/php.ini
+sed -i 's/^memory_limit.*/memory_limit = 256M/' /etc/php/7.4/fpm/php.ini
+sed -i 's/^post_max_size.*/post_max_size = 50M/' /etc/php/7.4/fpm/php.ini
+sed -i 's/^upload_max_filesize.*/upload_max_filesize = 50M/' /etc/php/7.4/fpm/php.ini
+sed -i 's/^;date.timezone.*/date.timezone = Asia\/Shanghai/' /etc/php/7.4/fpm/php.ini
 
 # 配置 PHP-FPM
-sed -i 's/^;listen.owner.*/listen.owner = www-data/' /etc/php/8.4/fpm/pool.d/www.conf
-sed -i 's/^;listen.group.*/listen.group = www-data/' /etc/php/8.4/fpm/pool.d/www.conf
-sed -i 's/^;listen.mode.*/listen.mode = 0660/' /etc/php/8.4/fpm/pool.d/www.conf
+sed -i 's/^;listen.owner.*/listen.owner = www-data/' /etc/php/7.4/fpm/pool.d/www.conf
+sed -i 's/^;listen.group.*/listen.group = www-data/' /etc/php/7.4/fpm/pool.d/www.conf
+sed -i 's/^;listen.mode.*/listen.mode = 0660/' /etc/php/7.4/fpm/pool.d/www.conf
 
 # 启动服务
-systemctl restart php8.4-fpm && systemctl enable php8.4-fpm
+systemctl restart php7.4-fpm && systemctl enable php7.4-fpm
 ```
 
 ## 步骤 5：安装 Composer
@@ -183,7 +181,7 @@ server {
     }
     
     location ~ \.php$ {
-        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+        fastcgi_pass unix:/run/php/php7.4-fpm.sock;
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         include fastcgi_params;
@@ -226,22 +224,11 @@ cd unishop
 # 因为后续会将目录权限改为 www-data，需要预先配置避免 Git 报错
 git config --global --add safe.directory /var/www/unishop
 
-# 处理 PHP 扩展依赖（根据 PHP 版本选择）
-# 如果使用 PHP 8.4，建议删除 composer.lock 以获得更好的兼容性
-if php -v | grep -q "PHP 8.4"; then
-    echo "检测到 PHP 8.4，将删除 composer.lock 以优化依赖兼容性"
-    rm -f composer.lock
-fi
 
 # 安装依赖
 echo "开始安装 Composer 依赖..."
 composer install --no-dev --optimize-autoloader
 
-# 注意：如果出现 gmp 扩展缺失错误，有两种解决方案：
-# 方案1：安装 php-gmp 扩展（标准方案）
-#   Debian/Ubuntu: apt install php8.4-gmp
-#   CentOS/RHEL: dnf install php-gmp
-# 方案2：对于 PHP 8.4，上面已经删除了 composer.lock 会自动跳过不必要的扩展
 
 # 验证安装是否成功
 if [ ! -f vendor/autoload.php ]; then

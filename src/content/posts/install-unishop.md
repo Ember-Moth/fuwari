@@ -1,12 +1,12 @@
 ---
-title: install-unishop
+title: Unishop 安装教程
 published: 2025-09-29
-description: ''
+description: 'UniShop 发卡面板的安装教程'
 image: ''
-tags: []
-category: ''
+tags: [UniShop]
+category: '教程'
 draft: false 
-lang: ''
+lang: 'zh_CN'
 ---
 
 

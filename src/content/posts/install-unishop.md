@@ -292,3 +292,7 @@ systemctl start unishop
 ```bash
 systemctl enable unishop
 ```
+
+## 完成安装
+
+最后一步，访问 https://your_domain.com/install 完成安装

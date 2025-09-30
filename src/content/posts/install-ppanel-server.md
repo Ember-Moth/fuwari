@@ -13,6 +13,12 @@ lang: 'zh_CN'
 
 - Debian 12
 
+#### 省流版：一键脚本
+```bash
+wget -N https://raw.githubusercontent.com/Ember-Moth/ppanel-install-script/refs/heads/main/install.sh && bash install.sh
+````
+
+
 #### 安装前的准备
 ```bash
 # 更新系统
@@ -25,8 +31,6 @@ apt install -y curl wget git unzip software-properties-common \
 # 设置时区
 timedatectl set-timezone Asia/Shanghai
 
-# 禁用防火墙（如果启用）
-ufw disable
 ```
 ## 步骤 1：安装 Nginx
 ```bash
@@ -90,6 +94,7 @@ Signed-By: /etc/apt/keyrings/mariadb-keyring.pgp
 EOF
 
 # 安装 MariaDB
+export DEBIAN_FRONTEND=noninteractive
 apt update && apt install -y mariadb-server mariadb-client
 
 # 启动服务
@@ -115,10 +120,9 @@ DB_PASSWORD=$(openssl rand -base64 16)
 echo "请牢记数据库密码！！！ 数据库密码：$DB_PASSWORD"
 
 # 创建数据库和用户（使用 mariadb 命令，避免弃用警告）
-mariadb -u root -p <<EOF
+mariadb -u root <<EOF
 CREATE DATABASE ppanel_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'ppanel'@'localhost' IDENTIFIED BY '$DB_PASSWORD';
-GRANT ALL PRIVILEGES ON ppanel_db.* TO 'ppanel'@'localhost';
+ALTER USER 'root'@'localhost' IDENTIFIED BY '$DB_PASSWORD';
 FLUSH PRIVILEGES;
 EOF
 ```
@@ -129,26 +133,25 @@ EOF
 mkdir -p /etc/nginx/conf.d
 
 # 创建站点配置
-cat > /etc/nginx/conf.d/ppanel.conf <<'EOF'
+cat > /etc/nginx/conf.d/ppanel.conf <<EOF
 server {
     listen 80;
     listen [::]:80;
-    server_name your-domain.com;  # 修改为你的域名
-    
+    server_name $domain;
+
     location / {
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header REMOTE-HOST $remote_addr;
-        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header REMOTE-HOST \$remote_addr;
+        proxy_set_header Upgrade \$http_upgrade;
         proxy_http_version 1.1;
 
-        add_header X-Cache $upstream_cache_status;
+        add_header X-Cache \$upstream_cache_status;
 
-        # 配置代理到后端服务
         proxy_pass http://127.0.0.1:8080;
     }
-    # 设置静态资源缓存
+
     location ~* \.(gif|png|jpg|css|js|woff|woff2)$ {
         expires 30d;
         add_header Cache-Control public;
@@ -169,7 +172,7 @@ systemctl reload nginx
 apt install -y certbot python3-certbot-nginx
 
 # 获取证书
-certbot --nginx -d your-domain.com
+certbot --nginx -d $domain --non-interactive --agree-tos -m admin@$domain
 ```
 
 ## 步骤 5：安装ppanel-server
@@ -210,28 +213,29 @@ sudo chmod +x /usr/local/bin/ppanel
 
 - 修改 ppanel.yaml 配置文件
 ```shell
-cat > /usr/local/etc/ppanel/ppanel.yaml <<'EOF'
-Host: 127.0.0.1 # 服务监听地址
-Port: 8080 # 服务监听端口, 默认: 8080
-Debug: false # 是否开启调试模式, 默认: false
+AccessSecret=$(openssl rand -base64 16)
+cat > /usr/local/etc/ppanel/ppanel.yaml <<EOF
+Host: 127.0.0.1
+Port: 8080
+Debug: false
 
-JwtAuth: # JWT认证配置
-  AccessSecret: CHANGE_ME_TO_A_RANDOM_SECRET # 访问令牌密钥, 请修改为随机字符串
-  AccessExpire: 604800 # 访问令牌过期时间,单位秒, 默认: 604800 (7天)
+JwtAuth:
+  AccessSecret: $AccessSecret
+  AccessExpire: 604800
 
-Logger: # 日志配置
-  FilePath: /var/log/ppanel/ppanel.log # 日志文件路径
-  MaxSize: 50 # 日志文件最大大小, 单位MB
-  MaxBackup: 3 # 日志文件最大备份数
-  MaxAge: 30 # 日志文件最大保存时间,单位天
-  Compress: true # 是否压缩日志文件
-  Level: info # 日志级别: debug, info, warn, error, panic, fatal
+Logger:
+  FilePath: /var/log/ppanel/ppanel.log
+  MaxSize: 50
+  MaxBackup: 3
+  MaxAge: 30
+  Compress: true
+  Level: info
 
 MySQL:
-  Addr: 127.0.0.1:3306 # MySQL地址
-  Username: ppanel # MySQL用户名 (与创建的用户一致)
-  Password: CHANGE_ME_TO_DB_PASSWORD # MySQL密码 (换成之前生成的随机密码)
-  Dbname: ppanel_db # MySQL数据库名 (与脚本创建的数据库一致)
+  Addr: 127.0.0.1:3306
+  Username: root
+  Password: $DB_PASSWORD
+  Dbname: ppanel_db
   Config: charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai
   MaxIdleConns: 10
   MaxOpenConns: 100
@@ -241,12 +245,12 @@ MySQL:
 
 Redis:
   Host: 127.0.0.1:6379
-  Pass: '' # 如果Redis设置了密码，在这里填写
+  Pass: ''
   DB: 0
 
 Administrator:
-  Email: admin@ppanel.dev # 后台登录邮箱，请修改
-  Password: CHANGE_ME_TO_STRONG_PASSWORD # 后台登录密码，请修改为强密码
+  Email: admin@ppanel.dev
+  Password: password
 EOF
 ```
 

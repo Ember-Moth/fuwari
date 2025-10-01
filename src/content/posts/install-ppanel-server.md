@@ -208,7 +208,7 @@ sudo mv ./etc/ppanel.yaml /usr/local/etc/ppanel/
 - 赋予二进制文件执行权限
 
 ```shell
-sudo chmod +x /usr/local/bin/ppanel
+sudo chmod +x /usr/local/bin/ppanel-server
 ```
 
 - 修改 ppanel.yaml 配置文件
